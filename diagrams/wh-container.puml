@@ -1,0 +1,79 @@
+@startuml
+
+!define FONTAWESOME https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/font-awesome-5
+!include c4/C4_Container.puml
+!include FONTAWESOME/users.puml
+
+title WarmHouse Container Diagram
+
+AddRelTag(api, $textColor="blue", $lineColor="blue")
+AddRelTag(serviceRequest, $textColor="red", $lineColor="red")
+AddRelTag(messaging, $textColor="green", $lineColor="green", $lineStyle = DashedLine())
+AddRelTag(registerApp, $textColor="orange", $lineColor="orange", $lineStyle = DashedLine())
+AddRelTag(extSystem, $textColor="gray", $lineColor="gray")
+AddRelTag(database, $textColor="gray", $lineColor="gray", $lineStyle = DashedLine())
+
+Person(user, "Users", "Users of the WarmHouse system", $sprite="users")
+System(WarmHouseSystem, "WarmHouse System", "Sensor control system")
+
+
+Container_Boundary(WarmHouseSystem, "New WarmHouse System") {
+  Container(Frontend, "Web Interface", "JavaScript, React")
+  Container(API, "API Gateway", "Java, Spring")
+  Container(WsService, "WebSocket service", "Java, Spring")
+  Container(Discovery, "Discovery Server", "Java, Spring", "Service registration server")
+
+  Container(PaymentService, "Payment service", "Java, Spring", "Device buying service")
+  Container(HeatingService, "Heating service", "Java, Spring", "Heating control service")
+  Container(TemperatureService, "Temperature service", "Java, Spring", "Temperature monitoring service")
+  Container(LightService, "Light service", "Java, Spring", "Light control service")
+  Container(HomeMonitoringService, "Home monitoring service", "Java, Spring", "Home monitoring control service")
+  Container(AutomaticGatesService, "Automatic gates service", "Java, Spring", "Automatic gates control service")
+
+  ContainerDb(PaymentDB, "Payment Database", "PostgreSQL", "Stores payment data")
+  Container(MessageBroker, "Message broker", "Kafka", "Real-time data")
+}
+
+
+System_Ext(HeatingSystem, "Heating system")
+System_Ext(LightSystem, "Light system")
+System_Ext(HomeMonitoringSystem, "Home monitoring system")
+System_Ext(AutomaticGatesSystem, "Automatic gates system")
+System_Ext(BankSystem, "Bank system")
+
+
+Rel(user, Frontend, "Uses the system")
+Rel(Frontend, API, "Uses the system", "HTTP/HTTPS", $tags=api)
+Rel(Frontend, WsService, "Receive telemetry", "WebSocket", $tags=api)
+
+Rel(API,Discovery,"Service registration on startup","HTTP/HTTPS", $tags=registerApp)
+Rel(PaymentService,Discovery,"Service registration on startup","HTTP/HTTPS", $tags=registerApp)
+Rel(HeatingService,Discovery,"Service registration on startup","HTTP/HTTPS", $tags=registerApp)
+Rel(TemperatureService,Discovery,"Service registration on startup","HTTP/HTTPS", $tags=registerApp)
+Rel(LightService,Discovery,"Service registration on startup","HTTP/HTTPS", $tags=registerApp)
+Rel(HomeMonitoringService,Discovery,"Service registration on startup","HTTP/HTTPS", $tags=registerApp)
+Rel(AutomaticGatesService,Discovery,"Service registration on startup","HTTP/HTTPS", $tags=registerApp)
+Rel(WsService,Discovery,"Service registration on startup","HTTP/HTTPS", $tags=registerApp)
+
+Rel(PaymentService,PaymentDB,"Read/write payment data",$tags=database)
+
+Rel(API,PaymentService,"Buy device","HTTP/HTTPS", $tags=serviceRequest)
+Rel(API,PaymentService,"Check device","HTTP/HTTPS", $tags=serviceRequest)
+Rel(API,HeatingService,"Turn the heating on/off","HTTP/HTTPS", $tags=serviceRequest)
+Rel(API,LightService,"Turn on/off the light","HTTP/HTTPS", $tags=serviceRequest)
+Rel(API,AutomaticGatesService,"Open/close automatic gates","HTTP/HTTPS", $tags=serviceRequest)
+Rel(API,TemperatureService,"Enable/disable monitoring","HTTP/HTTPS", $tags=serviceRequest)
+Rel(API,HomeMonitoringService,"Enable/disable monitoring","HTTP/HTTPS", $tags=serviceRequest)
+
+Rel_L(TemperatureService,MessageBroker,"Receive temperature data","Kafka", $tags=messaging)
+Rel_L(HomeMonitoringService,MessageBroker,"Receive home monitoring data","Kafka", $tags=messaging)
+Rel_L(MessageBroker,WsService,"Receive temperature data","Kafka", $tags=messaging)
+Rel_L(MessageBroker,WsService,"Receive home monitoring data","Kafka", $tags=messaging)
+
+Rel(HeatingService,HeatingSystem,"Turn the heating on/off",$tags=extSystem)
+Rel(TemperatureService,HeatingSystem,"Receive temperature data",$tags=extSystem)
+Rel(LightService,LightSystem,"Turn on/off the light",$tags=extSystem)
+Rel(HomeMonitoringService,HomeMonitoringSystem,"Receive home monitoring data",$tags=extSystem)
+Rel(AutomaticGatesService,AutomaticGatesSystem,"Open/close automatic gates",$tags=extSystem)
+Rel(PaymentService,BankSystem,"Buy device",$tags=extSystem)
+@enduml
