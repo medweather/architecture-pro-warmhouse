@@ -1,0 +1,424 @@
+services:
+
+  postgres:
+    image: postgres:17.7-alpine3.23
+    environment:
+      POSTGRES_DB: "warm_house"
+      POSTGRES_USER: "local"
+      POSTGRES_PASSWORD: "local"
+      PGDATA: "/var/lib/postgresql/data/pgdata"
+    volumes:
+      - ../2. Init Database:/docker-entrypoint-initdb.d
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U local -d warm_house" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+    networks:
+      - warmhouse
+
+  kafka-0:
+    image: confluentinc/cp-kafka:8.1.0
+    container_name: kafka-0
+    hostname: kafka-0
+    ports:
+      - "29092:29092"
+    environment:
+      CLUSTER_ID: ZETVJENWRjaECDUEExP_eg
+      KAFKA_NODE_ID: 0
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: INTERNAL://:9091,EXTERNAL://:29092,CONTROLLER://:9093
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 0@kafka-0:9093,1@kafka-1:9093,2@kafka-2:9093
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-0:9091,EXTERNAL://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+    healthcheck:
+      test: kafka-topics --bootstrap-server kafka-0:9091 --list
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - warmhouse
+
+  kafka-1:
+    image: confluentinc/cp-kafka:8.1.0
+    container_name: kafka-1
+    hostname: kafka-1
+    ports:
+      - "29093:29092"
+    environment:
+      CLUSTER_ID: ZETVJENWRjaECDUEExP_eg
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: INTERNAL://:9091,EXTERNAL://:29092,CONTROLLER://:9093
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 0@kafka-0:9093,1@kafka-1:9093,2@kafka-2:9093
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-1:9091,EXTERNAL://localhost:29093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+    healthcheck:
+      test: kafka-topics --bootstrap-server kafka-1:9091 --list
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - warmhouse
+
+  kafka-2:
+    image: confluentinc/cp-kafka:8.1.0
+    container_name: kafka-2
+    hostname: kafka-2
+    ports:
+      - "29094:29092"
+    environment:
+      CLUSTER_ID: ZETVJENWRjaECDUEExP_eg
+      KAFKA_NODE_ID: 2
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: INTERNAL://:9091,EXTERNAL://:29092,CONTROLLER://:9093
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 0@kafka-0:9093,1@kafka-1:9093,2@kafka-2:9093
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-2:9091,EXTERNAL://localhost:29094
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+    healthcheck:
+      test: kafka-topics --bootstrap-server kafka-2:9091 --list
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - warmhouse
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:v0.7.2
+    container_name: kafka-ui
+    hostname: kafka-ui
+    depends_on:
+      kafka-0:
+        condition: service_healthy
+      kafka-1:
+        condition: service_healthy
+      kafka-2:
+        condition: service_healthy
+    ports:
+      - "8079:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka-0:9091,kafka-1:9091,kafka-2:9091
+      DYNAMIC_CONFIG_ENABLED: true
+    networks:
+      - warmhouse
+
+  discovery:
+    build:
+      context: ./discovery
+      dockerfile: Dockerfile
+    ports:
+      - "8761:8761"
+    logging:
+      options:
+        max-size: '1m'
+    healthcheck:
+      test: "curl --fail --silent http://localhost:8761/actuator/health | grep UP || exit 1"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - warmhouse
+
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+      cache_from:
+        - gradle:9.1.0-jdk25-alpine
+    ports:
+      - "8091:8080"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://host.docker.internal:8761/eureka/
+    logging:
+      options:
+        max-size: '1m'
+    healthcheck:
+      test: "curl --fail --silent http://localhost:8091/actuator/health | grep UP || exit 1"
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+    depends_on:
+      discovery:
+        condition: service_healthy
+    networks:
+      - warmhouse
+
+  manager:
+    build:
+      context: ./manager-service
+      dockerfile: Dockerfile
+      cache_from:
+        - gradle:9.1.0-jdk25-alpine
+    ports:
+      - "8090:8090"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://host.docker.internal:8761/eureka/
+      - DATASOURCE_URL=jdbc:postgresql://host.docker.internal:5432/warm_house
+      - KAFKA_SERVERS=kafka-0:9091,kafka-1:9091,kafka-2:9091
+    logging:
+      options:
+        max-size: '1m'
+    healthcheck:
+      test: "curl --fail --silent http://localhost:8090/actuator/health | grep UP || exit 1"
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+    depends_on:
+      discovery:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      kafka-0:
+        condition: service_healthy
+      kafka-1:
+        condition: service_healthy
+      kafka-2:
+        condition: service_healthy
+    networks:
+      - warmhouse
+
+  payment:
+    build:
+      context: ./payment-service
+      dockerfile: Dockerfile
+      cache_from:
+        - gradle:9.1.0-jdk25-alpine
+    ports:
+      - "8089:8081"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://host.docker.internal:8761/eureka/
+      - DATASOURCE_URL=jdbc:postgresql://host.docker.internal:5432/warm_house
+      - KAFKA_SERVERS=kafka-0:9091,kafka-1:9091,kafka-2:9091
+    logging:
+      options:
+        max-size: '1m'
+    healthcheck:
+      test: "curl --fail --silent http://localhost:8089/actuator/health | grep UP || exit 1"
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+    depends_on:
+      discovery:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - warmhouse
+
+  ws:
+    build:
+      context: ./ws-service
+      dockerfile: Dockerfile
+      cache_from:
+        - gradle:9.1.0-jdk25-alpine
+    ports:
+      - "8087:8087"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://host.docker.internal:8761/eureka/
+      - KAFKA_SERVERS=kafka-0:9091,kafka-1:9091,kafka-2:9091
+    logging:
+      options:
+        max-size: '1m'
+    healthcheck:
+      test: "curl --fail --silent http://localhost:8087/actuator/health | grep UP || exit 1"
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+    depends_on:
+      discovery:
+        condition: service_healthy
+      kafka-0:
+        condition: service_healthy
+      kafka-1:
+        condition: service_healthy
+      kafka-2:
+        condition: service_healthy
+    networks:
+      - warmhouse
+
+  light:
+    build:
+      context: ./light-service
+      dockerfile: Dockerfile
+      cache_from:
+        - gradle:9.1.0-jdk25-alpine
+    ports:
+      - "8085:8085"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://host.docker.internal:8761/eureka/
+      - KAFKA_SERVERS=kafka-0:9091,kafka-1:9091,kafka-2:9091
+    logging:
+      options:
+        max-size: '1m'
+    healthcheck:
+      test: "curl --fail --silent http://localhost:8085/actuator/health | grep UP || exit 1"
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+    depends_on:
+      discovery:
+        condition: service_healthy
+      kafka-0:
+        condition: service_healthy
+      kafka-1:
+        condition: service_healthy
+      kafka-2:
+        condition: service_healthy
+    networks:
+      - warmhouse
+
+  heating:
+    build:
+      context: ./heating-service
+      dockerfile: Dockerfile
+      cache_from:
+        - gradle:9.1.0-jdk25-alpine
+    ports:
+      - "8084:8084"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://host.docker.internal:8761/eureka/
+      - KAFKA_SERVERS=kafka-0:9091,kafka-1:9091,kafka-2:9091
+    logging:
+      options:
+        max-size: '1m'
+    healthcheck:
+      test: "curl --fail --silent http://localhost:8084/actuator/health | grep UP || exit 1"
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+    depends_on:
+      discovery:
+        condition: service_healthy
+      kafka-0:
+        condition: service_healthy
+      kafka-1:
+        condition: service_healthy
+      kafka-2:
+        condition: service_healthy
+    networks:
+      - warmhouse
+
+  automatic-gates:
+    build:
+      context: ./automatic-gates-service
+      dockerfile: Dockerfile
+      cache_from:
+        - gradle:9.1.0-jdk25-alpine
+    ports:
+      - "8086:8086"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://host.docker.internal:8761/eureka/
+      - KAFKA_SERVERS=kafka-0:9091,kafka-1:9091,kafka-2:9091
+    logging:
+      options:
+        max-size: '1m'
+    healthcheck:
+      test: "curl --fail --silent http://localhost:8086/actuator/health | grep UP || exit 1"
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+    depends_on:
+      discovery:
+        condition: service_healthy
+      kafka-0:
+        condition: service_healthy
+      kafka-1:
+        condition: service_healthy
+      kafka-2:
+        condition: service_healthy
+    networks:
+      - warmhouse
+
+  temperature:
+    build:
+      context: ./temperature-service
+      dockerfile: Dockerfile
+      cache_from:
+        - gradle:9.1.0-jdk25-alpine
+    ports:
+      - "8083:8083"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://host.docker.internal:8761/eureka/
+      - KAFKA_SERVERS=kafka-0:9091,kafka-1:9091,kafka-2:9091
+    logging:
+      options:
+        max-size: '1m'
+    healthcheck:
+      test: "curl --fail --silent http://localhost:8083/actuator/health | grep UP || exit 1"
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    depends_on:
+      discovery:
+        condition: service_healthy
+      kafka-0:
+        condition: service_healthy
+      kafka-1:
+        condition: service_healthy
+      kafka-2:
+        condition: service_healthy
+    networks:
+      - warmhouse
+
+  home-monitoring:
+    build:
+      context: ./home-monitoring-service
+      dockerfile: Dockerfile
+      cache_from:
+        - gradle:9.1.0-jdk25-alpine
+    ports:
+      - "8082:8082"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://host.docker.internal:8761/eureka/
+      - KAFKA_SERVERS=kafka-0:9091,kafka-1:9091,kafka-2:9091
+    logging:
+      options:
+        max-size: '1m'
+    healthcheck:
+      test: "curl --fail --silent http://localhost:8082/actuator/health | grep UP || exit 1"
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+    depends_on:
+      discovery:
+        condition: service_healthy
+      kafka-0:
+        condition: service_healthy
+      kafka-1:
+        condition: service_healthy
+      kafka-2:
+        condition: service_healthy
+    networks:
+      - warmhouse
+
+volumes:
+  db-data:
+networks:
+  warmhouse:

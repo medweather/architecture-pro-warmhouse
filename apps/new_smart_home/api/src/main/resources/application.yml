@@ -1,0 +1,63 @@
+eureka:
+  instance:
+    prefer-ip-address: true
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+    enabled: ${EUREKA_ENABLED:true}
+
+spring:
+  application:
+    name: api
+
+cors:
+  allowed-origins: ${ALLOWED_ORIGINS:*}
+  allowed-methods: ${ALLOWED_METHODS:*}
+  allowed-headers: ${ALLOWED_HEADERS:*}
+  allow-credentials: ${ALLOW_CREDENTIALS:false}
+
+services:
+  manager-service:
+    id: manager-service
+    context-path: /manager
+  payment-service:
+    id: payment-service
+    context-path: /payment
+  heating-service:
+    id: heating-service
+    context-path: /heating
+    sensor-code: heating
+  temperature-service:
+    id: temperature-service
+    context-path: /temperature
+    sensor-code: temperature-monitoring
+  home-monitoring-service:
+    id: home-monitoring-service
+    context-path: /home-monitoring
+    sensor-code: home-monitoring
+  light-service:
+    id: light-service
+    context-path: /light
+    sensor-code: light
+  automatic-gates-service:
+    id: automatic-gates-service
+    context-path: /automatic-gates
+    sensor-code: automatic-gates
+
+springdoc:
+  swagger-ui:
+    urls:
+      - name: ${services.manager-service.id}
+        url: ${services.manager-service.context-path}/v3/api-docs
+      - name: ${services.payment-service.id}
+        url: ${services.payment-service.context-path}/v3/api-docs
+      - name: ${services.heating-service.id}
+        url: ${services.heating-service.context-path}/v3/api-docs
+      - name: ${services.temperature-service.id}
+        url: ${services.temperature-service.context-path}/v3/api-docs
+      - name: ${services.home-monitoring-service.id}
+        url: ${services.home-monitoring-service.context-path}/v3/api-docs
+      - name: ${services.light-service.id}
+        url: ${services.light-service.context-path}/v3/api-docs
+      - name: ${services.automatic-gates-service.id}
+        url: ${services.automatic-gates-service.context-path}/v3/api-docs
