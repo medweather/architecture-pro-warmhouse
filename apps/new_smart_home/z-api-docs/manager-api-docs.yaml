@@ -9,7 +9,7 @@ paths:
     post:
       tags:
       - manager-controller
-      summary: Проверка доступности датчика
+      summary: Добавление датчика в систему умного дома
       operationId: createSensor
       requestBody:
         content:
