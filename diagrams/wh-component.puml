@@ -1,17 +1,115 @@
 @startuml
+
+!include c4/C4_Container.puml
 !include c4/C4_Component.puml
 
-title WarmHouse Context Diagram
+LAYOUT_WITH_LEGEND()
 
-top to bottom direction
+title WarmHouse Component Diagram
 
-Person(user, "User", "A user of the WarmHouse system")
-System(WarmHouseSystem, "WarmHouse System", "Sensor control system, temperature monitoring")
+AddRelTag(relationAPI, $textColor="#B52412", $lineColor="#B52412")
+AddRelTag(relationMg, $textColor="#7F0A8F", $lineColor="#7F0A8F")
+AddRelTag(relationPm, $textColor="#D6953A", $lineColor="#D6953A")
+AddRelTag(relationWs, $textColor="#160975", $lineColor="#160975")
+AddRelTag(relationHt, $textColor="#6E6191", $lineColor="#6E6191")
+AddRelTag(relationTemp, $textColor="#0A6C8F", $lineColor="#0A6C8F")
 
-System_Ext(sensors, "Heating system", "sensor control")
+System(WarmHouseSystem, "WarmHouse System", "Sensor control system")
 
-Rel(user,WarmHouseSystem,"Uses the system")
-Rel(WarmHouseSystem,sensors,"Turn the heating on/off")
-Rel(WarmHouseSystem,sensors,"Receive temperature data from sensors")
-Rel(user,WarmHouseSystem,"View the current temperature in your home via a web interface")
+System_Boundary(WarmHouseSystem, "WarmHouse System") {
+    Container_Boundary(API, "API Gateway", "Java, Spring") {
+        Component(ExceptionAPI,"Error handler","Common error handler")
+        Component(ManagerClient,"Manager client","Check device exists")
+        Component(ConfigAPI,"Configuration","Routes configuration")
+
+        Rel(ConfigAPI,ExceptionAPI,"Handle errors", $tags=relationAPI)
+        Rel(ConfigAPI,ManagerClient,"Check device exists", $tags=relationAPI)
+    }
+    Container_Boundary(WsService, "WebSocket service", "Java, Spring") {
+        Component(ConfigWS,"Configuration","WS configuration")
+        Component(ListenerWS,"Kafka consumer","Read home monitoring/temperature data")
+        Component(ModelWS,"Model","Home monitoring/temperature data")
+        Component(ServiceWS,"Service","Send home monitoring/temperature data to client")
+
+        Rel(ListenerWS,ServiceWS,"Send home monitoring/temperature data to client", $tags=relationWs)
+    }
+    Container_Boundary(ManagerService, "Manager service", "Java, Spring", "Device managing service") {
+        Component(ConfigMg,"Configuration","Manager Configuration")
+        Component(ControllerMg,"Controller","Sensor control API")
+        Component(ListenerMg,"Kafka consumer","Read updated sensor statuses")
+        Component(ModelMg,"Model","Sensor data")
+        Component(RepositoryMg,"Repository","Read/Write sensor data")
+        Component(ServiceMg,"Service","Sensor control service")
+        Component(MigrationMg,"DB migrations","DB migrations by Liquibase")
+
+        Rel(ControllerMg,ServiceMg,"Sensor control", $tags=relationMg)
+        Rel(ServiceMg,RepositoryMg,"Read/Write sensor data", $tags=relationMg)
+        Rel(ListenerMg,ServiceMg,"Updated sensor status data", $tags=relationMg)
+    }
+    Container_Boundary(PaymentService, "Payment service", "Java, Spring", "Device buying service") {
+        Component(ConfigPm,"Configuration","Payment Configuration")
+        Component(ControllerPm,"Controller","Payment API")
+        Component(ExternalPm,"Bank system client","External system for sensor buying")
+        Component(ClientPm,"Manager client","Call manager service")
+        Component(ModelPm,"Model","Sensor data")
+        Component(ServicePm,"Service","Payment service")
+
+        Rel(ControllerPm,ServicePm,"Buy sensor", $tags=relationPm)
+        Rel(ServicePm,ClientPm,"Check device for buy", $tags=relationPm)
+        Rel(ServicePm,ExternalPm,"Buy sensor in bank system", $tags=relationPm)
+        Rel(ServicePm,ClientPm,"Create sensor data", $tags=relationPm)
+    }
+    Container_Boundary(HeatingService, "Heating service", "Java, Spring", "Heating control service") {
+        Component(ConfigHt,"Configuration","Heating Configuration")
+        Component(ControllerHt,"Controller","Heating API")
+        Component(ExternalHt,"Heating system client","External system for heating sensor")
+        Component(ModelHt,"Model","Updated sensor status data")
+        Component(ServiceHt,"Service","Turn the heating on/off")
+
+        Rel(ControllerHt,ServiceHt,"Turn the heating on/off", $tags=relationHt)
+        Rel(ServiceHt,ExternalHt,"Turn the heating on/off", $tags=relationHt)
+    }
+    Container_Boundary(TemperatureService, "Temperature service", "Java, Spring", "Temperature monitoring service") {
+        Component(ConfigTemp,"Configuration","Heating Configuration")
+        Component(ControllerTemp,"Controller","Heating Configuration")
+        Component(ExternalTemp,"Heating system client","External system for temperature monitoring")
+        Component(ModelTemp,"Model","Temperature data/Updated sensor status data")
+        Component(ServiceTemp,"Service","Enable/disable monitoring")
+
+        Rel(ControllerTemp,ServiceTemp,"Enable/disable monitoring", $tags=relationTemp)
+        Rel(ServiceTemp,ExternalTemp,"Enable/disable monitoring", $tags=relationTemp)
+    }
+    ContainerDb(WarmhouseDB, "Warm House Database", "PostgreSQL", "Stores warm house data")
+    Container(MessageBroker, "Message broker", "Kafka", "Real-time data")
+}
+
+System_Ext(BankSystem, "Bank system")
+System_Ext(HeatingSystem, "Heating system")
+
+Rel(ConfigAPI,ControllerMg,"Manager API", $tags=relationAPI)
+Rel(ConfigAPI,ControllerPm,"Payment API", $tags=relationAPI)
+Rel(ConfigAPI,ControllerHt,"Heating API", $tags=relationAPI)
+Rel(ConfigAPI,ControllerTemp,"Temperature API", $tags=relationAPI)
+
+Rel(RepositoryMg,WarmhouseDB,"Read/Write sensor data", $tags=relationMg)
+Rel(ListenerMg,MessageBroker,"Read updated sensor status data", $tags=relationMg)
+Rel(MigrationMg,WarmhouseDB,"DB migrations", $tags=relationMg)
+
+Rel(ExternalPm,BankSystem,"Buy sensor in bank system", $tags=relationPm)
+Rel(ClientPm,ControllerMg,"Create sensor data", $tags=relationPm)
+
+Rel(ExternalHt,HeatingSystem,"Turn the heating on/off", $tags=relationHt)
+Rel(ServiceHt,MessageBroker,"Send updated device status data", $tags=relationHt)
+
+Rel(ExternalTemp,HeatingSystem,"Enable/disable monitoring", $tags=relationTemp)
+Rel(ExternalTemp,MessageBroker,"Send temperature data", $tags=relationTemp)
+Rel(ServiceTemp,MessageBroker,"Send updated device status data", $tags=relationTemp)
+
+Rel(ListenerWS,MessageBroker,"Read home monitoring/temperature data", $tags=relationWs)
+
+Lay_D(WsService,API)
+Lay_D(API,ManagerService)
+Lay_D(API, PaymentService)
+Lay_D(API, TemperatureService)
+Lay_D(API, HeatingService)
 @enduml

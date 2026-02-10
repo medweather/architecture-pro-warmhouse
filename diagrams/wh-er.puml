@@ -1,0 +1,60 @@
+@startuml
+class Sensor {
+  +Integer id
+  +String name
+  +SensorType type
+  +Address address
+  +Double value
+  +PaymentUnit unit
+  +SensorsStatus status
+  +LocalDateTime lastUpdated
+  +LocalDateTime createdAt
+  +void turnOn()
+  +void turnOff()
+}
+
+class Address {
+  +Short id
+  +String name
+}
+
+enum PaymentUnit {
+    RUB,EUR,USD
+}
+
+class UpdateStatus {
+  +Integer sensorId
+  +Short statusId
+}
+
+class SensorType {
+  +Short id
+  +String code
+  +String name
+}
+
+class SensorsStatus {
+  +Short id
+  +String name
+}
+
+class TemperatureData {
+  +Integer sensorId
+  +Integer value
+  +LocalDateTime timestamp
+}
+
+class HomeMonitoringData {
+  +Integer sensorId
+  +String value
+  +LocalDateTime timestamp
+}
+
+Sensor "1" -- "1" PaymentUnit : has
+Sensor "1" -- "1" Address : has
+Sensor "1" -- "1" SensorType : has
+Sensor "1" -- "1" SensorsStatus : has
+Sensor "1" -- "0..*" TemperatureData : telemetry
+Sensor "1" -- "0..*" HomeMonitoringData : telemetry
+Sensor "1" -- "1" UpdateStatus : changeStatus
+@enduml

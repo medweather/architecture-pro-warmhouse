@@ -1,0 +1,55 @@
+@startuml
+class ManagerService {
+  +List<SensorTypeDto> sensorTypes()
+  +List<SensorDto> availableSensors()
+  +boolean checkSensor(String sensorCode)
+  +void updateSensorStatus(UpdateStatusDto dto)
+  +boolean checkSensorForBuy(String sensorCode)
+  +String createSensor(SensorCreateDto createDto)
+}
+
+class SensorDto {
+  +Integer id
+  +String name
+  +SensorTypeDto type
+  +AddressDto address
+  +Double value
+  +String unit
+  +SensorsStatusDto status
+  +LocalDateTime lastUpdated
+  +LocalDateTime createdAt
+}
+
+class SensorCreateDto {
+  +String name
+  +String code
+  +String location
+  +Double value
+  +String unit
+}
+
+class UpdateStatusDto {
+  +Integer sensorId
+  +Short statusId
+}
+
+class AddressDto {
+  +Short id
+  +String name
+}
+
+class SensorTypeDto {
+  +Short id
+  +String code
+  +String name
+}
+
+class SensorsStatusDto {
+  +Short id
+  +String name
+}
+
+SensorDto "1" -- "1" SensorTypeDto : has
+SensorDto "1" -- "1" SensorsStatusDto : has
+SensorDto "1" -- "1" AddressDto : has
+@enduml
