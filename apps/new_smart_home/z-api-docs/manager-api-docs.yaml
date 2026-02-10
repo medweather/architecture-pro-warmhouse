@@ -1,0 +1,326 @@
+openapi: 3.1.0
+info:
+  title: Manager service
+servers:
+- url: http://localhost:8080/manager
+  description: API (manager)
+paths:
+  /sensors/create:
+    post:
+      tags:
+      - manager-controller
+      summary: Проверка доступности датчика
+      operationId: createSensor
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SensorCreateDto"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: string
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema: {}
+              examples:
+                example400:
+                  value:
+                    status: 400
+                    message: Bad request
+                    detailMessage: Illegal parameter
+        "404":
+          description: Resource Not Found
+          content:
+            application/json:
+              schema: {}
+              examples:
+                example404:
+                  value:
+                    status: 404
+                    message: Not Found
+                    detailMessage: NotFoundException
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema: {}
+              examples:
+                example500:
+                  value:
+                    status: 500
+                    message: Internal Server Error
+                    detailMessage: RuntimeException
+  /sensors:
+    get:
+      tags:
+      - manager-controller
+      summary: Подключенные датчики
+      operationId: availableSensors
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SensorDto"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema: {}
+              examples:
+                example400:
+                  value:
+                    status: 400
+                    message: Bad request
+                    detailMessage: Illegal parameter
+        "404":
+          description: Resource Not Found
+          content:
+            application/json:
+              schema: {}
+              examples:
+                example404:
+                  value:
+                    status: 404
+                    message: Not Found
+                    detailMessage: NotFoundException
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema: {}
+              examples:
+                example500:
+                  value:
+                    status: 500
+                    message: Internal Server Error
+                    detailMessage: RuntimeException
+  /sensors/types:
+    get:
+      tags:
+      - manager-controller
+      summary: Все возможные типы устройств в системе
+      operationId: sensorTypes
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SensorTypeDto"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema: {}
+              examples:
+                example400:
+                  value:
+                    status: 400
+                    message: Bad request
+                    detailMessage: Illegal parameter
+        "404":
+          description: Resource Not Found
+          content:
+            application/json:
+              schema: {}
+              examples:
+                example404:
+                  value:
+                    status: 404
+                    message: Not Found
+                    detailMessage: NotFoundException
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema: {}
+              examples:
+                example500:
+                  value:
+                    status: 500
+                    message: Internal Server Error
+                    detailMessage: RuntimeException
+  /sensors/check/{sensorCode}:
+    get:
+      tags:
+      - manager-controller
+      summary: Проверка подключения устройства к умному дому
+      operationId: checkSensor
+      parameters:
+      - name: sensorCode
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: boolean
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema: {}
+              examples:
+                example400:
+                  value:
+                    status: 400
+                    message: Bad request
+                    detailMessage: Illegal parameter
+        "404":
+          description: Resource Not Found
+          content:
+            application/json:
+              schema: {}
+              examples:
+                example404:
+                  value:
+                    status: 404
+                    message: Not Found
+                    detailMessage: NotFoundException
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema: {}
+              examples:
+                example500:
+                  value:
+                    status: 500
+                    message: Internal Server Error
+                    detailMessage: RuntimeException
+  /sensors/check-for-buy/{sensorCode}:
+    get:
+      tags:
+      - manager-controller
+      summary: Проверка доступности устройства для покупки
+      operationId: checkSensorForBuy
+      parameters:
+      - name: sensorCode
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: boolean
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema: {}
+              examples:
+                example400:
+                  value:
+                    status: 400
+                    message: Bad request
+                    detailMessage: Illegal parameter
+        "404":
+          description: Resource Not Found
+          content:
+            application/json:
+              schema: {}
+              examples:
+                example404:
+                  value:
+                    status: 404
+                    message: Not Found
+                    detailMessage: NotFoundException
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema: {}
+              examples:
+                example500:
+                  value:
+                    status: 500
+                    message: Internal Server Error
+                    detailMessage: RuntimeException
+components:
+  schemas:
+    SensorCreateDto:
+      type: object
+      properties:
+        name:
+          type: string
+        code:
+          type: string
+        location:
+          type: string
+        value:
+          type: number
+          format: double
+        unit:
+          type: string
+    AddressDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+    SensorDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+        type:
+          $ref: "#/components/schemas/SensorTypeDto"
+        address:
+          $ref: "#/components/schemas/AddressDto"
+        value:
+          type: number
+          format: double
+        unit:
+          type: string
+        status:
+          $ref: "#/components/schemas/SensorStatusDto"
+        lastUpdated:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+    SensorStatusDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+    SensorTypeDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        code:
+          type: string
+        name:
+          type: string
