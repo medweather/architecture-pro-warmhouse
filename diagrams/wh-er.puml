@@ -5,7 +5,7 @@ class Sensor {
   +SensorType type
   +Address address
   +Double value
-  +PaymentUnit unit
+  +String unit
   +SensorsStatus status
   +LocalDateTime lastUpdated
   +LocalDateTime createdAt
@@ -16,10 +16,6 @@ class Sensor {
 class Address {
   +Short id
   +String name
-}
-
-enum PaymentUnit {
-    RUB,EUR,USD
 }
 
 class UpdateStatus {
@@ -50,7 +46,6 @@ class HomeMonitoringData {
   +LocalDateTime timestamp
 }
 
-Sensor "1" -- "1" PaymentUnit : has
 Sensor "1" -- "1" Address : has
 Sensor "1" -- "1" SensorType : has
 Sensor "1" -- "1" SensorsStatus : has
