@@ -25,9 +25,7 @@ spring:
         spring:
           json:
             type:
-              mapping:
-                - updateDeviceStatus:ru.medweather.homemonitoring.model.UpdateStatusDto
-                - homeMonitoringData:ru.medweather.homemonitoring.model.HomeMonitoringData
+              mapping: updateDeviceStatus:ru.medweather.homemonitoring.model.UpdateStatusDto,homeMonitoringData:ru.medweather.homemonitoring.model.HomeMonitoringData
 
 kafka-topic:
   update-device-status-topic:

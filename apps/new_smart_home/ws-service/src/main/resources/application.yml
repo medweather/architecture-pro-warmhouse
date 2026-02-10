@@ -18,15 +18,15 @@ spring:
       group-id: sensors-ws
       client-id: ${spring.application.name}
       max-poll-records: ${KAFKA_MAX_POLL_RECORDS:1000}
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
         linger:
           ms: ${KAFKA_LINGER_MS:10}
         spring:
           json:
             type:
-              mapping:
-                - homeMonitoringData:ru.medweather.ws.model.HomeMonitoringData
-                - temperatureData:ru.medweather.ws.model.TemperatureData
+              mapping: homeMonitoringData:ru.medweather.ws.model.HomeMonitoringData,temperatureData:ru.medweather.ws.model.TemperatureData
 
 kafka-topic:
   temperature-data-topic:

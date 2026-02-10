@@ -174,6 +174,7 @@ services:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://host.docker.internal:8761/eureka/
       - DATASOURCE_URL=jdbc:postgresql://host.docker.internal:5432/warm_house
       - KAFKA_SERVERS=kafka-0:9091,kafka-1:9091,kafka-2:9091
+      - SWAGGER_SERVER_API=http://localhost:8091/manager
     logging:
       options:
         max-size: '1m'
@@ -209,6 +210,7 @@ services:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://host.docker.internal:8761/eureka/
       - DATASOURCE_URL=jdbc:postgresql://host.docker.internal:5432/warm_house
       - KAFKA_SERVERS=kafka-0:9091,kafka-1:9091,kafka-2:9091
+      - SWAGGER_SERVER_API=http://localhost:8091/payment
     logging:
       options:
         max-size: '1m'
@@ -269,6 +271,7 @@ services:
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://host.docker.internal:8761/eureka/
       - KAFKA_SERVERS=kafka-0:9091,kafka-1:9091,kafka-2:9091
+      - SWAGGER_SERVER_API=http://localhost:8091/light
     logging:
       options:
         max-size: '1m'
@@ -301,6 +304,7 @@ services:
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://host.docker.internal:8761/eureka/
       - KAFKA_SERVERS=kafka-0:9091,kafka-1:9091,kafka-2:9091
+      - SWAGGER_SERVER_API=http://localhost:8091/heating
     logging:
       options:
         max-size: '1m'
@@ -333,6 +337,7 @@ services:
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://host.docker.internal:8761/eureka/
       - KAFKA_SERVERS=kafka-0:9091,kafka-1:9091,kafka-2:9091
+      - SWAGGER_SERVER_API=http://localhost:8091/automatic-gates
     logging:
       options:
         max-size: '1m'
@@ -365,6 +370,7 @@ services:
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://host.docker.internal:8761/eureka/
       - KAFKA_SERVERS=kafka-0:9091,kafka-1:9091,kafka-2:9091
+      - SWAGGER_SERVER_API=http://localhost:8091/temperature
     logging:
       options:
         max-size: '1m'
@@ -397,6 +403,7 @@ services:
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://host.docker.internal:8761/eureka/
       - KAFKA_SERVERS=kafka-0:9091,kafka-1:9091,kafka-2:9091
+      - SWAGGER_SERVER_API=http://localhost:8091/home-monitoring
     logging:
       options:
         max-size: '1m'

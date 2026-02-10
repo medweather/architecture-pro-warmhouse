@@ -13,6 +13,6 @@ public interface ManagerClient {
     @GetMapping("/sensors/check-for-buy/{sensorCode}")
     Boolean checkSensorForBuy(@PathVariable String sensorCode);
 
-    @PostMapping("/sensors/create/")
+    @PostMapping("/sensors/create")
     String createSensor(@RequestBody SensorCreateDto createDto);
 }
