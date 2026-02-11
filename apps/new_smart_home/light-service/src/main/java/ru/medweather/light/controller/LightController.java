@@ -17,18 +17,9 @@ public class LightController {
     private final LightService lightService;
 
     @ApiErrorRes
-    @PutMapping("/turn-on/{id}")
-    @Operation(summary = "Включить свет")
-    public String turnOn(@PathVariable Integer id) {
-        lightService.turnOn(id);
-        return "Свет включен! sensorId = %d".formatted(id);
-    }
-
-    @ApiErrorRes
-    @PutMapping("/turn-off/{id}")
-    @Operation(summary = "Выключить свет")
-    public String turnOff(@PathVariable Integer id) {
-        lightService.turnOff(id);
-        return "Свет выключен! sensorId = %d".formatted(id);
+    @PutMapping("/{id}/status/{statusId}")
+    @Operation(summary = "Включить/выключить свет")
+    public String turnOn(@PathVariable Integer id, @PathVariable Short statusId) {
+        return lightService.updateStatus(id, statusId);
     }
 }

@@ -1,15 +1,9 @@
-FROM warmhouse-gradle-builder AS build
+FROM gradle:9.1.0-jdk25-alpine AS build
 
 WORKDIR /app
 
-
-COPY build.gradle settings.gradle ./
-RUN --mount=type=cache,target=/root/.gradle/caches \
-    ./gradlew build || true
-
-COPY src ./src
-RUN --mount=type=cache,target=/root/.gradle/caches \
-    ./gradlew bootJar -x test
+COPY . .
+RUN gradle clean bootJar
 
 FROM openjdk:25-ea-jdk-slim
 

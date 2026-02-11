@@ -16,21 +16,33 @@ public class TemperatureServiceImpl implements TemperatureService {
     private final HeatingClient heatingClient;
     private final KafkaTemplate<String, UpdateStatusDto> kafkaTemplate;
 
+    private static final Short ACTIVE_STATUS_ID = 1;
+    private static final Short INACTIVE_STATUS_ID = 2;
+
     @Override
-    public void turnOn(Integer id) {
+    public String updateStatus(Integer id, Short statusId) {
+        return switch (statusId) {
+            case 1 -> turnOn(id);
+            case 2 -> turnOff(id);
+            default -> "Не корректно передана команда устройству!";
+        };
+    }
+
+    private String turnOn(Integer id) {
         heatingClient.turnOn(id);
         kafkaTemplate.send(
                 kafkaTopicProperties.getUpdateDeviceStatusTopic().getName(),
-                new UpdateStatusDto(id, (short) 1)
+                new UpdateStatusDto(id, ACTIVE_STATUS_ID)
         );
+        return "Мониторинг температуры включен! sensorId = %d".formatted(id);
     }
 
-    @Override
-    public void turnOff(Integer id) {
+    private String turnOff(Integer id) {
         heatingClient.turnOff(id);
         kafkaTemplate.send(
                 kafkaTopicProperties.getUpdateDeviceStatusTopic().getName(),
-                new UpdateStatusDto(id, (short) 2)
+                new UpdateStatusDto(id, INACTIVE_STATUS_ID)
         );
+        return "Мониторинг температуры отключен! sensorId = %d".formatted(id);
     }
 }

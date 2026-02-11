@@ -153,7 +153,7 @@ paths:
                     status: 500
                     message: Internal Server Error
                     detailMessage: RuntimeException
-  /sensors/check/{sensorCode}:
+  /sensors/{sensorCode}/check:
     get:
       tags:
       - manager-controller
@@ -205,7 +205,7 @@ paths:
                     status: 500
                     message: Internal Server Error
                     detailMessage: RuntimeException
-  /sensors/check-for-buy/{sensorCode}:
+  /sensors/{sensorCode}/check-for-buy:
     get:
       tags:
       - manager-controller

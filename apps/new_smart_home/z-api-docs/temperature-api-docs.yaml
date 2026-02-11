@@ -5,12 +5,12 @@ servers:
 - url: http://localhost:8080/temperature
   description: API (temperature)
 paths:
-  /sensors/turn-on/{id}:
+  /sensors/{id}/status/{statusId}:
     put:
       tags:
       - temperature-controller
-      summary: Включить мониторинг температуры
-      operationId: turnOn
+      summary: Включить/выключить мониторинг температуры
+      operationId: status
       parameters:
       - name: id
         in: path
@@ -18,56 +18,10 @@ paths:
         schema:
           type: integer
           format: int32
-      responses:
-        "200":
-          description: OK
-          content:
-            '*/*':
-              schema:
-                type: string
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema: {}
-              examples:
-                example400:
-                  value:
-                    status: 400
-                    message: Bad request
-                    detailMessage: Illegal parameter
-        "404":
-          description: Resource Not Found
-          content:
-            application/json:
-              schema: {}
-              examples:
-                example404:
-                  value:
-                    status: 404
-                    message: Not Found
-                    detailMessage: NotFoundException
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema: {}
-              examples:
-                example500:
-                  value:
-                    status: 500
-                    message: Internal Server Error
-                    detailMessage: RuntimeException
-  /sensors/turn-off/{id}:
-    put:
-      tags:
-      - temperature-controller
-      summary: Выключить мониторинг температуры
-      operationId: turnOff
-      parameters:
-      - name: id
+      - name: statusId
         in: path
         required: true
+        description: Доступны только значения статусов 1-включить, 2-выключить.
         schema:
           type: integer
           format: int32

@@ -17,18 +17,9 @@ public class AutomaticGatesController {
     private final AutomaticGatesService automaticGatesService;
 
     @ApiErrorRes
-    @PutMapping("/turn-on/{id}")
-    @Operation(summary = "Открыть ворота")
-    public String turnOn(@PathVariable Integer id) {
-        automaticGatesService.turnOn(id);
-        return "Ворота открылись! sensorId = %d".formatted(id);
-    }
-
-    @ApiErrorRes
-    @PutMapping("/turn-off/{id}")
-    @Operation(summary = "Закрыть ворота")
-    public String turnOff(@PathVariable Integer id) {
-        automaticGatesService.turnOff(id);
-        return "Ворота закрылись! sensorId = %d".formatted(id);
+    @PutMapping("/{id}/status/{statusId}")
+    @Operation(summary = "Открыть/закрыть ворота")
+    public String updateStatus(@PathVariable Integer id, @PathVariable Short statusId) {
+        return automaticGatesService.updateStatus(id, statusId);
     }
 }

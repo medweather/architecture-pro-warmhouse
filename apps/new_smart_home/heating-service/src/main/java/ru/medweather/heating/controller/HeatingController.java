@@ -17,18 +17,9 @@ public class HeatingController {
     private final HeatingService heatingService;
 
     @ApiErrorRes
-    @PutMapping("/turn-on/{id}")
-    @Operation(summary = "Включить отопление")
-    public String turnOn(@PathVariable Integer id) {
-        heatingService.turnOn(id);
-        return "Отопление включено! sensorId = %d".formatted(id);
-    }
-
-    @ApiErrorRes
-    @PutMapping("/turn-off/{id}")
-    @Operation(summary = "Выключить отопление")
-    public String turnOff(@PathVariable Integer id) {
-        heatingService.turnOff(id);
-        return "Отопление выключено! sensorId = %d".formatted(id);
+    @PutMapping("/{id}/status/{statusId}")
+    @Operation(summary = "Включить/выключить отопление")
+    public String updateStatus(@PathVariable Integer id, @PathVariable Short statusId) {
+        return heatingService.updateStatus(id, statusId);
     }
 }
