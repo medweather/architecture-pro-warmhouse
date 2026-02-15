@@ -1,0 +1,44 @@
+server:
+  port: ${SERVER_PORT:8083}
+
+eureka:
+  instance:
+    prefer-ip-address: true
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+    enabled: ${EUREKA_ENABLED:true}
+
+spring:
+  application:
+    name: temperature-service
+  kafka:
+    bootstrap-servers: ${KAFKA_SERVERS:localhost:29092,localhost:29093,localhost:29094}
+    producer:
+      client-id: ${spring.application.name}
+      batch-size: ${KAFKA_BATCH_SIZE:1KB}
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        linger:
+          ms: ${KAFKA_LINGER_MS:10}
+        spring:
+          json:
+            type:
+              mapping: updateDeviceStatus:ru.medweather.temperature.model.UpdateStatusDto,temperatureData:ru.medweather.temperature.model.TemperatureData
+
+kafka-topic:
+  update-device-status-topic:
+    name: update-device.status
+    partitions: ${KAFKA_TOPIC_PARTITIONS:3}
+    replicas: ${KAFKA_TOPIC_REPLICAS:1}
+    retention-ms: ${KAFKA_TOPIC_RETENTION_MS:10000}
+  temperature-data-topic:
+    name: temperature.data
+    partitions: ${KAFKA_TOPIC_PARTITIONS:3}
+    replicas: ${KAFKA_TOPIC_REPLICAS:1}
+    retention-ms: ${KAFKA_TOPIC_RETENTION_MS:10000}
+
+swagger:
+  server:
+    api: ${SWAGGER_SERVER_API:http://localhost:8080/temperature}

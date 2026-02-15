@@ -1,0 +1,45 @@
+server:
+  port: ${SERVER_PORT:8090}
+
+eureka:
+  instance:
+    prefer-ip-address: true
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+    enabled: ${EUREKA_ENABLED:true}
+
+spring:
+  application:
+    name: manager-service
+  datasource:
+    url: ${DATASOURCE_URL:jdbc:postgresql://localhost:5432/warm_house}
+    username: ${DATASOURCE_USERNAME:local}
+    password: ${DATASOURCE_PASSWORD:local}
+    driver-class-name: org.postgresql.Driver
+  liquibase:
+    change-log: classpath:db/liquibase-changelog.yaml
+  kafka:
+    bootstrap-servers: ${KAFKA_SERVERS:localhost:29092,localhost:29093,localhost:29094}
+    consumer:
+      group-id: sensors-manager
+      client-id: ${spring.application.name}
+      max-poll-records: ${KAFKA_MAX_POLL_RECORDS:1000}
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring:
+          json:
+            type:
+              mapping: updateDeviceStatus:ru.medweather.manager.model.dto.UpdateStatusDto
+
+kafka-topic:
+  update-device-status-topic:
+    name: update-device.status
+    partitions: ${KAFKA_TOPIC_PARTITIONS:3}
+    replicas: ${KAFKA_TOPIC_REPLICAS:1}
+    retention-ms: ${KAFKA_TOPIC_RETENTION_MS:10000}
+
+swagger:
+  server:
+    api: ${SWAGGER_SERVER_API:http://localhost:8080/manager}

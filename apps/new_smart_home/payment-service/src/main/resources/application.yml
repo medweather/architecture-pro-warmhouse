@@ -1,0 +1,23 @@
+server:
+  port: ${SERVER_PORT:8081}
+
+eureka:
+  instance:
+    prefer-ip-address: true
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+    enabled: ${EUREKA_ENABLED:true}
+
+spring:
+  application:
+    name: payment-service
+  datasource:
+    url: ${DATASOURCE_URL:jdbc:postgresql://localhost:5432/warm_house}
+    username: ${DATASOURCE_USERNAME:local}
+    password: ${DATASOURCE_PASSWORD:local}
+    driver-class-name: org.postgresql.Driver
+
+swagger:
+  server:
+    api: ${SWAGGER_SERVER_API:http://localhost:8080/payment}

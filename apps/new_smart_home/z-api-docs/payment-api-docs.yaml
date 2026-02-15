@@ -1,0 +1,84 @@
+openapi: 3.1.0
+info:
+  title: Payment service
+servers:
+- url: http://localhost:8080/payment
+  description: API (payment)
+paths:
+  /sensors:
+    post:
+      tags:
+      - payment-controller
+      summary: Покупка устройства
+      operationId: buySensor
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BuySensorRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: string
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema: {}
+              examples:
+                example400:
+                  value:
+                    status: 400
+                    message: Bad request
+                    detailMessage: Illegal parameter
+        "404":
+          description: Resource Not Found
+          content:
+            application/json:
+              schema: {}
+              examples:
+                example404:
+                  value:
+                    status: 404
+                    message: Not Found
+                    detailMessage: NotFoundException
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema: {}
+              examples:
+                example500:
+                  value:
+                    status: 500
+                    message: Internal Server Error
+                    detailMessage: RuntimeException
+components:
+  schemas:
+    BuySensorRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        sensorCode:
+          type: string
+        location:
+          type: string
+        value:
+          type: number
+          format: double
+        unit:
+          type: string
+        money:
+          type: number
+          format: double
+        currency:
+          type: string
+          enum:
+          - RUB
+          - EUR
+          - USD

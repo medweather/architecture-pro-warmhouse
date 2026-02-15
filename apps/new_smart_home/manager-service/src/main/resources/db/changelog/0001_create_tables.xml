@@ -1,0 +1,64 @@
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+   <changeSet id="0001_create_tables" author="medweather">
+      <sql>
+            CREATE TABLE address
+            (
+                id   SERIAL PRIMARY KEY,
+                name VARCHAR NOT NULL
+            );
+
+            CREATE TABLE sensors_status
+            (
+                id   SMALLINT PRIMARY KEY,
+                name VARCHAR(20) NOT NULL
+            );
+
+            INSERT INTO sensors_status
+            VALUES (1, 'active'),
+                   (2, 'inactive');
+
+            CREATE TABLE sensors_type
+            (
+                id   SMALLINT PRIMARY KEY,
+                code VARCHAR(50)  NOT NULL,
+                name VARCHAR(100) NOT NULL
+            );
+
+            INSERT INTO sensors_type
+            VALUES (1, 'heating', 'Heating control system'),
+                   (2, 'temperature-monitoring', 'Temperature monitoring system'),
+                   (3, 'home-monitoring', 'Home monitoring system'),
+                   (4, 'light', 'Light control system'),
+                   (5, 'automatic-gates', 'Automatic gates control system');
+
+            CREATE TABLE sensors
+            (
+                id           SERIAL PRIMARY KEY,
+                name         VARCHAR(100)                       NOT NULL,
+                type_id      SMALLINT REFERENCES sensors_type   NOT NULL,
+                address_id   INTEGER REFERENCES address         NOT NULL,
+                value        FLOAT                                       DEFAULT 0,
+                unit         VARCHAR(20),
+                status_id    SMALLINT REFERENCES sensors_status NOT NULL,
+                last_updated TIMESTAMP WITH TIME ZONE           NOT NULL DEFAULT NOW(),
+                created_at   TIMESTAMP WITH TIME ZONE           NOT NULL DEFAULT NOW()
+            );
+
+            CREATE INDEX idx_sensors_type ON sensors (type_id);
+            CREATE INDEX idx_sensors_location ON sensors (address_id);
+            CREATE INDEX idx_sensors_status ON sensors (status_id);
+            CREATE UNIQUE INDEX unq_idx_sensors_status ON sensors_status (name);
+            CREATE UNIQUE INDEX unq_idx_sensors_type ON sensors_type (code);
+      </sql>
+      <rollback>
+          <sql>
+              DROP TABLE sensors;
+              DROP TABLE sensors_type;
+              DROP TABLE sensors_status;
+              DROP TABLE address;
+          </sql>
+      </rollback>
+   </changeSet>
+</databaseChangeLog>

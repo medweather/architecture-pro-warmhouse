@@ -1,0 +1,107 @@
+@startuml
+
+!define FONTAWESOME https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/font-awesome-5
+!include c4/C4_Container.puml
+!include FONTAWESOME/users.puml
+
+LAYOUT_WITH_LEGEND()
+
+title WarmHouse Container Diagram
+
+AddRelTag(api, $textColor="#31718F", $lineColor="#31718F")
+AddRelTag(updateStatus, $textColor="#964435", $lineColor="#964435")
+AddRelTag(serviceRequest, $textColor="#31718F", $lineColor="#31718F")
+AddRelTag(messagingProducer, $textColor="#D41E1E", $lineColor="#D41E1E", $lineStyle = DashedLine())
+AddRelTag(messagingConsumer, $textColor="#348018", $lineColor="#348018", $lineStyle = DashedLine())
+AddRelTag(registerApp, $textColor="orange", $lineColor="orange", $lineStyle = DashedLine())
+AddRelTag(extSystem, $textColor="gray", $lineColor="gray")
+AddRelTag(database, $textColor="#763596", $lineColor="#763596")
+
+
+Person(user, "Users", "Users of the WarmHouse system", $sprite="users")
+System(WarmHouseSystem, "WarmHouse System", "Sensor control system")
+
+
+System_Boundary(WarmHouseSystem, "WarmHouse System") {
+  Container(Frontend, "Web Interface", "JavaScript, React")
+  Container(Mobile, "Mobile Application", "Kotlin, Swift")
+  Container(API, "API Gateway", "Java, Spring")
+  Container(WsService, "WebSocket service", "Java, Spring")
+  Container(Discovery, "Discovery Server", "Java, Spring", "Service registration server")
+
+  Container(ManagerService, "Manager service", "Java, Spring", "Device managing service")
+  Container(PaymentService, "Payment service", "Java, Spring", "Device buying service")
+  Container(HeatingService, "Heating service", "Java, Spring", "Heating control service")
+  Container(TemperatureService, "Temperature service", "Java, Spring", "Temperature monitoring service")
+  Container(LightService, "Light service", "Java, Spring", "Light control service")
+  Container(HomeMonitoringService, "Home monitoring service", "Java, Spring", "Home monitoring control service")
+  Container(AutomaticGatesService, "Automatic gates service", "Java, Spring", "Automatic gates control service")
+
+  ContainerDb(WarmhouseDB, "Warm House Database", "PostgreSQL", "Stores warm house data")
+  Container(MessageBroker, "Message broker", "Kafka", "Real-time data")
+}
+
+
+System_Ext(HeatingSystem, "Heating system")
+System_Ext(LightSystem, "Light system")
+System_Ext(HomeMonitoringSystem, "Home monitoring system")
+System_Ext(AutomaticGatesSystem, "Automatic gates system")
+System_Ext(BankSystem, "Bank system")
+
+
+Rel_D(user, Frontend, "Uses the system")
+Rel_D(user, Mobile, "Uses the system")
+Rel_D(Frontend, API, "Uses the system", "HTTP/HTTPS", $tags=api)
+Rel_D(Mobile, API, "Uses the system", "HTTP/HTTPS", $tags=api)
+Rel_D(Frontend, WsService, "Receive telemetry", "Websocket", $tags=messagingProducer)
+Rel_D(Mobile, WsService, "Receive telemetry", "Websocket", $tags=messagingProducer)
+
+Rel_D(API,Discovery,"Service registration on startup","HTTP/HTTPS", $tags=registerApp)
+Rel_D(PaymentService,Discovery,"Service registration on startup","HTTP/HTTPS", $tags=registerApp)
+Rel_D(HeatingService,Discovery,"Service registration on startup","HTTP/HTTPS", $tags=registerApp)
+Rel_D(TemperatureService,Discovery,"Service registration on startup","HTTP/HTTPS", $tags=registerApp)
+Rel_D(LightService,Discovery,"Service registration on startup","HTTP/HTTPS", $tags=registerApp)
+Rel_D(HomeMonitoringService,Discovery,"Service registration on startup","HTTP/HTTPS", $tags=registerApp)
+Rel_D(AutomaticGatesService,Discovery,"Service registration on startup","HTTP/HTTPS", $tags=registerApp)
+Rel_D(WsService,Discovery,"Service registration on startup","HTTP/HTTPS", $tags=registerApp)
+
+Rel_D(PaymentService,ManagerService,"Write sensors data","HTTP/HTTPS",$tags=serviceRequest)
+Rel_D(ManagerService,WarmhouseDB,"Read/Write sensors data","SQL",$tags=database)
+
+Rel_D(API,PaymentService,"Buy device","HTTP/HTTPS", $tags=serviceRequest)
+Rel_D(API,ManagerService,"Check device","HTTP/HTTPS", $tags=serviceRequest)
+Rel_D(API,ManagerService,"Read device","HTTP/HTTPS", $tags=serviceRequest)
+Rel_D(API,HeatingService,"Turn the heating on/off","HTTP/HTTPS", $tags=serviceRequest)
+Rel_D(API,LightService,"Turn on/off the light","HTTP/HTTPS", $tags=serviceRequest)
+Rel_D(API,AutomaticGatesService,"Open/close automatic gates","HTTP/HTTPS", $tags=serviceRequest)
+Rel_D(API,TemperatureService,"Enable/disable monitoring","HTTP/HTTPS", $tags=serviceRequest)
+Rel_D(API,HomeMonitoringService,"Enable/disable monitoring","HTTP/HTTPS", $tags=serviceRequest)
+
+Rel_D(HeatingService,MessageBroker,"Update device status","Kafka", $tags=messagingProducer)
+Rel_D(LightService,MessageBroker,"Update device status","Kafka", $tags=messagingProducer)
+Rel_D(AutomaticGatesService,MessageBroker,"Update device status","Kafka", $tags=messagingProducer)
+Rel_D(TemperatureService,MessageBroker,"Update device status","Kafka", $tags=messagingProducer)
+Rel_D(HomeMonitoringService,MessageBroker,"Update device status","Kafka", $tags=messagingProducer)
+Rel_D(ManagerService,MessageBroker,"Read updated devices statuses","Kafka", $tags=messagingConsumer)
+
+Rel_D(TemperatureService,MessageBroker,"Send temperature data","Kafka", $tags=messagingProducer)
+Rel_D(HomeMonitoringService,MessageBroker,"Send home monitoring data","Kafka", $tags=messagingProducer)
+Rel_D(WsService,MessageBroker,"Read temperature/home-monitoring data","Kafka", $tags=messagingConsumer)
+
+Rel(HeatingService,HeatingSystem,"Turn the heating on/off",$tags=extSystem)
+Rel(TemperatureService,HeatingSystem,"Receive temperature data",$tags=extSystem)
+Rel(LightService,LightSystem,"Turn on/off the light",$tags=extSystem)
+Rel(HomeMonitoringService,HomeMonitoringSystem,"Receive home monitoring data",$tags=extSystem)
+Rel(AutomaticGatesService,AutomaticGatesSystem,"Open/close automatic gates",$tags=extSystem)
+Rel(PaymentService,BankSystem,"Buy device",$tags=extSystem)
+
+Lay_R(API, WsService)
+Lay_D(API, ManagerService)
+Lay_R(WarmhouseDB, MessageBroker)
+Lay_R(ManagerService, PaymentService)
+Lay_D(MessageBroker, Discovery)
+Lay_U(Discovery,BankSystem)
+Lay_U(AutomaticGatesSystem,LightSystem)
+Lay_U(BankSystem,HeatingSystem)
+Lay_U(HeatingSystem,HomeMonitoringSystem)
+@enduml

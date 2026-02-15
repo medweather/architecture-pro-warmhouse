@@ -1,0 +1,20 @@
+@startuml
+
+!define FONTAWESOME https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/font-awesome-5
+!include c4/C4_Context.puml
+!include FONTAWESOME/users.puml
+
+title WarmHouse Context Diagram
+
+top to bottom direction
+
+Person(user, "Users", "Users of the WarmHouse system", $sprite="users")
+System(WarmHouseSystem, "WarmHouse System", "Sensor control system, temperature monitoring")
+
+System_Ext(HeatingSystem, "Heating system")
+
+Rel(user,WarmHouseSystem,"Uses the system")
+Rel(WarmHouseSystem,HeatingSystem,"Turn the heating on/off")
+Rel(WarmHouseSystem,HeatingSystem,"Receive temperature data from sensors")
+Rel(user,WarmHouseSystem,"View the current temperature in your home via a web interface")
+@enduml

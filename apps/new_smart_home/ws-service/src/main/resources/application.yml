@@ -1,0 +1,41 @@
+server:
+  port: ${SERVER_PORT:8087}
+
+eureka:
+  instance:
+    prefer-ip-address: true
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+    enabled: ${EUREKA_ENABLED:true}
+
+spring:
+  application:
+    name: ws-service
+  kafka:
+    bootstrap-servers: ${KAFKA_SERVERS:localhost:29092,localhost:29093,localhost:29094}
+    consumer:
+      group-id: sensors-ws
+      client-id: ${spring.application.name}
+      max-poll-records: ${KAFKA_MAX_POLL_RECORDS:1000}
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        linger:
+          ms: ${KAFKA_LINGER_MS:10}
+        spring:
+          json:
+            type:
+              mapping: homeMonitoringData:ru.medweather.ws.model.HomeMonitoringData,temperatureData:ru.medweather.ws.model.TemperatureData
+
+kafka-topic:
+  temperature-data-topic:
+    name: temperature.data
+    partitions: ${KAFKA_TOPIC_PARTITIONS:3}
+    replicas: ${KAFKA_TOPIC_REPLICAS:1}
+    retention-ms: ${KAFKA_TOPIC_RETENTION_MS:10000}
+  home-monitoring-data-topic:
+    name: home-monitoring.data
+    partitions: ${KAFKA_TOPIC_PARTITIONS:3}
+    replicas: ${KAFKA_TOPIC_REPLICAS:1}
+    retention-ms: ${KAFKA_TOPIC_RETENTION_MS:10000}
