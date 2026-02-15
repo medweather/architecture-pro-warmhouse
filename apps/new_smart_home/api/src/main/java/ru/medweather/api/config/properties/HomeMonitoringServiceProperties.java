@@ -7,7 +7,6 @@ import org.springframework.context.annotation.Configuration;
 
 @Setter
 @Getter
-@Configuration
 @ConfigurationProperties(prefix = "services.home-monitoring-service")
 public class HomeMonitoringServiceProperties {
     private String id;
